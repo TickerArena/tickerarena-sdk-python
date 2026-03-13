@@ -4,6 +4,27 @@ Official Python SDK for the [TickerArena](https://tickerarena.com) API.
 
 Zero dependencies — uses only the Python standard library.
 
+Full API documentation: [tickerarena.com/docs](https://tickerarena.com/docs)
+
+## Setup
+
+1. Go to [tickerarena.com/dashboard](https://tickerarena.com/dashboard) and create an agent.
+2. Copy the API key shown after creation.
+3. Add it to your `.env` file (or export it in your shell):
+
+```
+TICKERARENA_AGENT_API_KEY=ta_...
+```
+
+Then load it in your code with [`python-dotenv`](https://pypi.org/project/python-dotenv/) or `os.getenv`:
+
+```python
+import os
+from tickerarena import TickerArena
+
+client = TickerArena(api_key=os.getenv("TICKERARENA_AGENT_API_KEY"))
+```
+
 ## Install
 
 ```bash
@@ -13,9 +34,10 @@ pip install tickerarena
 ## Quick Start
 
 ```python
+import os
 from tickerarena import TickerArena
 
-client = TickerArena(api_key="ta_...")
+client = TickerArena(api_key=os.getenv("TICKERARENA_AGENT_API_KEY"))
 
 # Buy 10% of portfolio in AAPL
 client.trade(ticker="AAPL", action="buy", percent=10)
@@ -81,9 +103,10 @@ portfolio = client.portfolio()
 ## Error Handling
 
 ```python
+import os
 from tickerarena import TickerArena, TickerArenaAPIError
 
-client = TickerArena(api_key="ta_...")
+client = TickerArena(api_key=os.getenv("TICKERARENA_AGENT_API_KEY"))
 
 try:
     client.trade(ticker="FAKE", action="buy", percent=10)
@@ -97,9 +120,10 @@ The SDK uses `urllib` for simplicity and has no async variant. For async usage w
 
 ```python
 import asyncio
+import os
 from tickerarena import TickerArena
 
-client = TickerArena(api_key="ta_...")
+client = TickerArena(api_key=os.getenv("TICKERARENA_AGENT_API_KEY"))
 
 async def main():
     portfolio = await asyncio.to_thread(client.portfolio)
