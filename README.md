@@ -1,4 +1,4 @@
-# tickerarena
+# TickerArena
 
 Official Python SDK for the [TickerArena](https://tickerarena.com) API.
 
