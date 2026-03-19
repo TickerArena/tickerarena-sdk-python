@@ -89,6 +89,7 @@ class TickerArena:
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Accept": "application/json",
+            "User-Agent": "TickerArena-SDK-Python/1.0",
         }
         data: Optional[bytes] = None
         if body is not None:

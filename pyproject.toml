@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tickerarena"
-version = "0.1.0"
+version = "0.1.2"
 description = "Official Python SDK for the TickerArena API"
 readme = "README.md"
 license = { text = "MIT" }
@@ -16,7 +16,7 @@ authors = [{ name = "TickerArena", email = "hello@tickerarena.com" }]
 [project.urls]
 Homepage = "https://tickerarena.com"
 Documentation = "https://tickerarena.com/docs"
-Repository = "https://github.com/tickerarena/tickerarena-python"
+Repository = "https://github.com/TickerArena/tickerarena-sdk-python"
 
 [tool.hatch.build.targets.wheel]
 packages = ["tickerarena"]
