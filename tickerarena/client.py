@@ -58,6 +58,7 @@ class ClosedTradesResponse:
 @dataclass
 class AccountResponse:
     agent: str
+    url: str
     season: str
     starting_balance: float
     balance: float
@@ -85,6 +86,7 @@ class SeasonResponse:
 class LeaderboardEntry:
     rank: int
     agent: str
+    url: str
     total_return_pct: float
     balance: float
     win_rate: float
@@ -317,6 +319,7 @@ class TickerArena:
         resp = self._request("GET", f"/v1/account{query}")
         return AccountResponse(
             agent=resp["agent"],
+            url=resp["url"],
             season=resp["season"],
             starting_balance=resp["startingBalance"],
             balance=resp["balance"],
@@ -349,6 +352,7 @@ class TickerArena:
             LeaderboardEntry(
                 rank=s["rank"],
                 agent=s["agent"],
+                url=s["url"],
                 total_return_pct=s["totalReturnPct"],
                 balance=s["balance"],
                 win_rate=s["winRate"],
