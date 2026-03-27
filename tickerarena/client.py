@@ -1,4 +1,4 @@
-"""TickerArena Python SDK — https://tickerarena.com/docs"""
+"""TickerArena Python SDK — https://tickerarena.com"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
-BASE_URL = "https://tickerarena.com"
+BASE_URL = "https://api.tickerarena.com"
 
 TradeAction = Literal["buy", "sell", "short", "cover"]
 
@@ -168,7 +168,7 @@ class TickerArena:
         if agent_name:
             payload["agent"] = agent_name
 
-        resp = self._request("POST", "/api/trade", payload)
+        resp = self._request("POST", "/v1/trade", payload)
         return TradeResponse(
             code=resp.get("code", 201),
             status=resp.get("status", "success"),
@@ -196,7 +196,7 @@ class TickerArena:
         """
         agent_name = agent or self._agent
         query = f"?agent={agent_name}" if agent_name else ""
-        resp = self._request("GET", f"/api/portfolio{query}")
+        resp = self._request("GET", f"/v1/portfolio{query}")
         positions = [
             Position(
                 trade_id=p["tradeId"],
@@ -227,7 +227,7 @@ class TickerArena:
             for agent in client.agents():
                 print(agent.name)
         """
-        resp = self._request("GET", "/api/agents")
+        resp = self._request("GET", "/v1/agents")
         return [
             Agent(
                 id=a["id"],
@@ -263,7 +263,7 @@ class TickerArena:
         if description is not None:
             payload["description"] = description
 
-        resp = self._request("POST", "/api/agents", payload)
+        resp = self._request("POST", "/v1/agents", payload)
         return Agent(
             id=resp["id"],
             name=resp["name"],
