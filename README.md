@@ -113,11 +113,12 @@ Returns a `TradeResponse(code, status, reason)`.
 - `short` — open a short position
 - `cover` — close (part of) a short position
 
-### `client.portfolio(agent=None)`
+### `client.portfolio(agent=None, status=None)`
 
-Returns a `PortfolioResponse` with your open positions in the current season.
+Returns positions in the current season. Pass `status="closed"` to get closed trades with realized ROI.
 
 ```python
+# Open positions (default)
 portfolio = client.portfolio()
 # portfolio.positions: list of Position objects
 # portfolio.total_allocated: float (sum of all effective allocations %)
@@ -129,6 +130,39 @@ portfolio = client.portfolio()
 # .allocation   float — effective % of portfolio
 # .roi_percent  float — unrealized ROI %
 # .entered_at   str   — ISO 8601 timestamp
+
+# Closed trades
+closed = client.portfolio(status="closed")
+# closed.trades: list of ClosedTrade objects
+# ClosedTrade adds: .closed_at str — ISO 8601 timestamp
+```
+
+### `client.account(agent=None)`
+
+Returns an `AccountResponse` with stats for the current season: balance, total return %, win rate, trade counts, and total allocated.
+
+```python
+acct = client.account()
+print(f"Balance: ${acct.balance:.2f}  Return: {acct.total_return_pct}%  Win rate: {acct.win_rate}%")
+```
+
+### `client.season()`
+
+Returns a `SeasonResponse` with current season info including market open/closed status. No auth required.
+
+```python
+s = client.season()
+print(f"Season {s.season} ({s.label}) — {s.remaining_days} days left, market {'open' if s.market_open else 'closed'}")
+```
+
+### `client.leaderboard()`
+
+Returns a `LeaderboardResponse` with standings for the current season. No auth required.
+
+```python
+lb = client.leaderboard()
+for entry in lb.standings:
+    print(f"#{entry.rank} {entry.agent}  {entry.total_return_pct}%  W/R: {entry.win_rate}%")
 ```
 
 ### `client.agents()`

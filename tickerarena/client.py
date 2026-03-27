@@ -34,9 +34,72 @@ class Position:
 
 
 @dataclass
+class ClosedTrade:
+    trade_id: str
+    ticker: str
+    direction: Literal["long", "short"]
+    allocation: float
+    roi_percent: float
+    entered_at: str
+    closed_at: str
+
+
+@dataclass
 class PortfolioResponse:
     positions: List[Position]
     total_allocated: float
+
+
+@dataclass
+class ClosedTradesResponse:
+    trades: List[ClosedTrade]
+
+
+@dataclass
+class AccountResponse:
+    agent: str
+    season: str
+    starting_balance: float
+    balance: float
+    total_return_pct: float
+    win_rate: float
+    total_trades: int
+    closed_trades: int
+    total_allocated: float
+
+
+@dataclass
+class SeasonResponse:
+    season: int
+    label: str
+    status: str
+    starts_at: str
+    ends_at: str
+    remaining_days: int
+    total_agents: int
+    total_trades: int
+    market_open: bool
+
+
+@dataclass
+class LeaderboardEntry:
+    rank: int
+    agent: str
+    total_return_pct: float
+    balance: float
+    win_rate: float
+    trades: int
+    closed_trades: int
+    best_ticker: Optional[str]
+
+
+@dataclass
+class LeaderboardResponse:
+    season: int
+    label: str
+    ends_at: str
+    remaining_days: int
+    standings: List[LeaderboardEntry]
 
 
 @dataclass
@@ -175,15 +238,22 @@ class TickerArena:
             reason=resp.get("reason"),
         )
 
-    def portfolio(self, agent: Optional[str] = None) -> PortfolioResponse:
+    def portfolio(
+        self,
+        agent: Optional[str] = None,
+        status: Optional[Literal["open", "closed"]] = None,
+    ) -> "PortfolioResponse | ClosedTradesResponse":
         """
-        Get open positions in the current season.
+        Get positions for the current season.
 
         Args:
-            agent: Target a specific agent by name. Overrides the client default.
+            agent:  Target a specific agent by name. Overrides the client default.
+            status: ``"open"`` (default) returns current positions with live ROI.
+                    ``"closed"`` returns closed trades with realized ROI.
 
         Returns:
-            :class:`PortfolioResponse` with ``positions`` and ``total_allocated``.
+            :class:`PortfolioResponse` when status is ``"open"`` (default),
+            :class:`ClosedTradesResponse` when status is ``"closed"``.
 
         Raises:
             :class:`TickerArenaAPIError` on non-2xx responses.
@@ -193,10 +263,35 @@ class TickerArena:
             port = client.portfolio()
             for pos in port.positions:
                 print(pos.ticker, pos.direction, f"{pos.roi_percent}%")
+
+            closed = client.portfolio(status="closed")
+            for t in closed.trades:
+                print(t.ticker, f"{t.roi_percent}%", t.closed_at)
         """
         agent_name = agent or self._agent
-        query = f"?agent={agent_name}" if agent_name else ""
+        params: Dict[str, str] = {}
+        if agent_name:
+            params["agent"] = agent_name
+        if status:
+            params["status"] = status
+        query = "?" + "&".join(f"{k}={v}" for k, v in params.items()) if params else ""
         resp = self._request("GET", f"/v1/portfolio{query}")
+
+        if status == "closed":
+            trades = [
+                ClosedTrade(
+                    trade_id=t["tradeId"],
+                    ticker=t["ticker"],
+                    direction=t["direction"],
+                    allocation=t["allocation"],
+                    roi_percent=t["roiPercent"],
+                    entered_at=t["enteredAt"],
+                    closed_at=t["closedAt"],
+                )
+                for t in resp.get("trades", [])
+            ]
+            return ClosedTradesResponse(trades=trades)
+
         positions = [
             Position(
                 trade_id=p["tradeId"],
@@ -211,6 +306,64 @@ class TickerArena:
         return PortfolioResponse(
             positions=positions,
             total_allocated=resp.get("totalAllocated", 0.0),
+        )
+
+    # ── Account / Season / Leaderboard ─────────────────────────────────────────
+
+    def account(self, agent: Optional[str] = None) -> AccountResponse:
+        """Get account stats for the current season."""
+        agent_name = agent or self._agent
+        query = f"?agent={agent_name}" if agent_name else ""
+        resp = self._request("GET", f"/v1/account{query}")
+        return AccountResponse(
+            agent=resp["agent"],
+            season=resp["season"],
+            starting_balance=resp["startingBalance"],
+            balance=resp["balance"],
+            total_return_pct=resp["totalReturnPct"],
+            win_rate=resp["winRate"],
+            total_trades=resp["totalTrades"],
+            closed_trades=resp["closedTrades"],
+            total_allocated=resp["totalAllocated"],
+        )
+
+    def season(self) -> SeasonResponse:
+        """Get current season info including market status. No auth required."""
+        resp = self._request("GET", "/v1/season")
+        return SeasonResponse(
+            season=resp["season"],
+            label=resp["label"],
+            status=resp["status"],
+            starts_at=resp["startsAt"],
+            ends_at=resp["endsAt"],
+            remaining_days=resp["remainingDays"],
+            total_agents=resp["totalAgents"],
+            total_trades=resp["totalTrades"],
+            market_open=resp["marketOpen"],
+        )
+
+    def leaderboard(self) -> LeaderboardResponse:
+        """Get the leaderboard for the current season. No auth required."""
+        resp = self._request("GET", "/v1/leaderboard")
+        standings = [
+            LeaderboardEntry(
+                rank=s["rank"],
+                agent=s["agent"],
+                total_return_pct=s["totalReturnPct"],
+                balance=s["balance"],
+                win_rate=s["winRate"],
+                trades=s["trades"],
+                closed_trades=s["closedTrades"],
+                best_ticker=s.get("bestTicker"),
+            )
+            for s in resp.get("standings", [])
+        ]
+        return LeaderboardResponse(
+            season=resp["season"],
+            label=resp["label"],
+            ends_at=resp["endsAt"],
+            remaining_days=resp["remainingDays"],
+            standings=standings,
         )
 
     # ── Agent management ──────────────────────────────────────────────────────
