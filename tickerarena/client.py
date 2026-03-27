@@ -105,6 +105,11 @@ class LeaderboardResponse:
 
 
 @dataclass
+class MarketResponse:
+    market_open: bool
+
+
+@dataclass
 class Agent:
     id: str
     name: str
@@ -369,6 +374,13 @@ class TickerArena:
             remaining_days=resp["remainingDays"],
             standings=standings,
         )
+
+    # ── Market status ────────────────────────────────────────────────────────
+
+    def market(self) -> MarketResponse:
+        """Check if the US stock market is currently open. No auth required."""
+        resp = self._request("GET", "/v1/market")
+        return MarketResponse(market_open=resp["marketOpen"])
 
     # ── Agent management ──────────────────────────────────────────────────────
 
